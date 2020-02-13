@@ -1,0 +1,12 @@
+--- ripgrep-11.0.2/Cargo.toml	1970-01-01T00:00:00+00:00
++++ ripgrep-11.0.2/Cargo.toml	2019-08-03T12:42:56.325256+00:00
+@@ -88,9 +88,6 @@
+ 
+ [features]
+ pcre2 = ["grep/pcre2"]
+-simd-accel = ["grep/simd-accel"]
+-[target."cfg(all(target_env = \"musl\", target_pointer_width = \"64\"))".dependencies.jemallocator]
+-version = "0.3.0"
+ [badges.appveyor]
+ repository = "BurntSushi/ripgrep"
+ 
