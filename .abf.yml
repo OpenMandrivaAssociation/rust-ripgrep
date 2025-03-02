@@ -1,2 +1,3 @@
 sources:
-  ripgrep-11.0.2.crate: c7229d89e2e3578635238068d23d8c0341565a0d
+  ripgrep-14.1.1-vendor.tar.xz: 759e5ed9f70dd811fe53b13f6ce2f49fd09f3cd1
+  ripgrep-14.1.1.crate: bdc875594d6271e01ad6e128e7ee0bf439a8f2c5
