@@ -1,9 +1,0 @@
---- ripgrep-14.1.1/Cargo.toml	1970-01-01T00:00:01+00:00
-+++ ripgrep-14.1.1/Cargo.toml	2025-02-22T20:24:22.972440+00:00
-@@ -183,6 +183,3 @@
- 
- [features]
- pcre2 = ["grep/pcre2"]
--
--[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
--version = "0.5.0"

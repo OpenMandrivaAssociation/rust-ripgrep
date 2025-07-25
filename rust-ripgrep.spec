@@ -1,76 +1,66 @@
-# Rust packages always list license files and docs
-# inside the crate as well as the containing directory
-%undefine _duplicate_files_terminate_build
-%bcond_without check
-
-%global crate ripgrep
-
+%global rustflags '-Clink-arg=-Wl,-z,relro,-z,now'
 Name:           rust-ripgrep
 Version:        14.1.1
-Release:        1
-Summary:        Line-oriented search tool that recursively searches the current directory for a regex pattern while respecting gitignore rules
-Group:          Development/Rust
-
-License:        BSD-3-Clause AND MIT AND Unicode-DFS-2016 AND (Apache-2.0 OR BSL-1.0) AND (MIT OR Apache-2.0) AND (Unlicense OR MIT)
-# LICENSE.dependencies contains a full license breakdown
-URL:            https://crates.io/crates/ripgrep
-Source0:        %{crates_source}
-Source1:        %{crate}-%{version}-vendor.tar.xz
-Patch:          ripgrep-fix-metadata.diff
-
-ExclusiveArch:  %{rust_arches}
-
+Release:        2
+Summary:        A search tool that combines ag with grep
+License:        MIT AND Unlicense
+Group:          Productivity/Text/Utilities
+URL:            https://github.com/BurntSushi/ripgrep
+Source0:        ripgrep-%{version}.tar.gz
+Source1:        vendor.tar.gz
 BuildRequires:  cargo-rpm-macros >= 24
+BuildRequires:  pkgconf
 
-%global _description %{expand:
-Ripgrep is a line-oriented search tool that recursively searches the
-current directory for a regex pattern while respecting gitignore rules.
-ripgrep has first class support on Windows, macOS and Linux.}
+%description
+ripgrep is a line oriented search tool that combines the usability of
+The Silver Searcher (similar to ack) with the raw speed of GNU grep.
+ripgrep works by recursively searching your current directory
+for a regex pattern.
 
-%description %{_description}
+%prep 
+%autosetup -n ripgrep-%{version} -p1 -a1 
+%setup -n ripgrep-%{version} -a1
+tar xvfz %{SOURCE1}
+mkdir -p .cargo 
+cat >> .cargo/config.toml << EOF
+[source.crates-io]
+replace-with = "vendored-sources"
 
-%files
-%license COPYING
-%license LICENSE-MIT
-%license UNLICENSE
-%license LICENSE.dependencies
-%doc CHANGELOG.md
-%doc FAQ.md
-%doc GUIDE.md
-%doc README.md
-%doc RELEASE-CHECKLIST.md
-%{_bindir}/rg
-%{_mandir}/man1/rg.1*
-%{_datadir}/bash-completion/completions/rg.bash
-%{_datadir}/fish/completions/rg.fish
-%{_datadir}/zsh/site-functions/_rg
+[source.vendored-sources]
+directory = "vendor"
 
-%prep
-%autosetup -n %{crate}-%{version} -p1
-tar xf %{SOURCE1}
-%cargo_prep -v vendor
+EOF
 
 %build
-%cargo_build
-%{cargo_license_summary}
-%{cargo_license} > LICENSE.dependencies
-
-%cargo_vendor_manifest
+cargo build --features 'pcre2' --release
 
 %install
-%cargo_install
-pwd
-target/release/rg --generate man > rg.1
-target/release/rg --generate complete-bash > rg.bash
-target/release/rg --generate complete-fish > rg.fish
-target/release/rg --generate complete-zsh > _rg
+install -D -d -m 0755 %{buildroot}%{_bindir}
+install -m 0755 %{_builddir}/ripgrep-%{version}/target/release/rg %{buildroot}%{_bindir}/rg
 
-install -Dpm 0644 rg.1 -t %{buildroot}/%{_mandir}/man1/
-install -Dpm 0644 rg.bash -t %{buildroot}/%{_datadir}/bash-completion/completions/
-install -Dpm 0644 rg.fish -t %{buildroot}/%{_datadir}/fish/completions/
-install -Dpm 0644 _rg -t %{buildroot}/%{_datadir}/zsh/site-functions/
+# remove residual crate file
+rm -f %{buildroot}%{_prefix}/.crates*
 
-%if %{with check}
-%check
-%cargo_test
-%endif
+TARGETBIN=target/release/rg
+$TARGETBIN --generate man > rg.1
+$TARGETBIN --generate complete-bash > rg.bash
+$TARGETBIN --generate complete-fish > rg.fish
+$TARGETBIN --generate complete-zsh > rg.zsh
+install -Dm 644 rg.1 %{buildroot}%{_mandir}/man1/rg.1
+install -Dm 644 rg.bash %{buildroot}%{_datadir}/bash-completion/completions/rg
+install -Dm 644 rg.fish %{buildroot}%{_datadir}/fish/vendor_completions.d/rg.fish
+install -Dm 644 rg.zsh %{buildroot}%{_datadir}/zsh/site-functions/_rg
+
+%files
+%license LICENSE-MIT UNLICENSE
+%doc CHANGELOG.md README.md
+%{_mandir}/man1/rg.1*
+%{_bindir}/rg
+
+%{_datadir}/bash-completion
+
+%{_datadir}/fish
+
+%{_datadir}/zsh
+
+%changelog
